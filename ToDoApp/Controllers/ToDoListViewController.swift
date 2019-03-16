@@ -28,9 +28,8 @@ class ToDoListViewController: UITableViewController {
 //        if let items = defaults.array(forKey: "todoListArray") as? [Item] {
 //            itemArray = items
 //        }
-
         
-       loadItems()
+        loadItems()
         
     }
     
@@ -120,9 +119,9 @@ class ToDoListViewController: UITableViewController {
         
     }
     
-    func loadItems() {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        //In the above declaration is being provided with a default value that is used when func is called w/o args
         
         do {
             itemArray = try context.fetch(request)
@@ -131,9 +130,31 @@ class ToDoListViewController: UITableViewController {
             print("Error fetching data from context, \(error)")
         }
 
-        
+        tableView.reloadData()
     }
     
 
+}
+
+extension ToDoListViewController: UISearchBarDelegate {
+    
+    //querying data using core data and implementing search bar
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        
+        print(searchBar.text!)
+        
+        //NSPredicate to query data
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+    
+        //sort data
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        
+        loadItems(with: request)
+        
+        
+    }
+    
 }
 
