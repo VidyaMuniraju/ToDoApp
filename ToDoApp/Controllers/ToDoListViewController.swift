@@ -14,6 +14,12 @@ class ToDoListViewController: UITableViewController {
     
     var itemArray = [Item]()
     
+    var selectedCategory : Category? {
+        didSet {
+            loadItems()
+        }
+    }
+    
     
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
@@ -29,7 +35,6 @@ class ToDoListViewController: UITableViewController {
 //            itemArray = items
 //        }
         
-        loadItems()
         
     }
     
@@ -80,11 +85,11 @@ class ToDoListViewController: UITableViewController {
             //what will happen next
             //print(textField.text!)
             
-            
-            
+        
             let newItem = Item(context: self.context)
             newItem.title = textField.text!
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             self.itemArray.append(newItem)
             
             self.saveItems()
@@ -94,7 +99,6 @@ class ToDoListViewController: UITableViewController {
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create New Item"
             textField = alertTextField
-            
             
         }
         
@@ -119,9 +123,20 @@ class ToDoListViewController: UITableViewController {
         
     }
     
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate?  = nil) {
         
         //In the above declaration is being provided with a default value that is used when func is called w/o args
+        //creating predicate to fetch data related to a category
+        
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        }
+        else {
+            request.predicate = categoryPredicate
+        }
+        
         
         do {
             itemArray = try context.fetch(request)
@@ -146,13 +161,28 @@ extension ToDoListViewController: UISearchBarDelegate {
         print(searchBar.text!)
         
         //NSPredicate to query data
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
     
         //sort data
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
-        loadItems(with: request)
+        loadItems(with: request, predicate: predicate)
         
+        
+    }
+    
+    //going back to original list after search
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        if searchBar.text?.count == 0 {
+            
+            loadItems()
+            
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+            
+        }
         
     }
     
