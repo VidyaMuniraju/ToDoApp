@@ -163,40 +163,34 @@ class ToDoListViewController: UITableViewController {
 
 }
 
-//extension ToDoListViewController: UISearchBarDelegate {
-//
-//    //querying data using core data and implementing search bar
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//
-//        let request : NSFetchRequest<Item> = Item.fetchRequest()
-//
-//        print(searchBar.text!)
-//
-//        //NSPredicate to query data
-//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//
-//        //sort data
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//
-//        loadItems(with: request, predicate: predicate)
-//
-//
-//    }
-//
-//    //going back to original list after search
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//
-//        if searchBar.text?.count == 0 {
-//
-//            loadItems()
-//
-//            DispatchQueue.main.async {
-//                searchBar.resignFirstResponder()
-//            }
-//
-//        }
-//
-//    }
-//
-//}
+
+//MARK: - Search Bar Methods
+extension ToDoListViewController: UISearchBarDelegate {
+
+    //querying data using core data and implementing search bar
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title", ascending: true)
+
+        tableView.reloadData()
+
+
+    }
+
+    //going back to original list after search
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+
+        if searchBar.text?.count == 0 {
+
+            loadItems()
+
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+
+        }
+
+    }
+
+}
 
